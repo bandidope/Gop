@@ -3,7 +3,7 @@ import baileys from '@whiskeysockets/baileys';
 import cheerio from 'cheerio';
 
 let handler = async (m, { conn, text, args }) => {
-  if (!text) return m.reply(`🐉 Ingresa un texto. Ejemplo: .pinterest Gohan BEAST 🐉`);
+  if (!text) return m.reply(`🐉 Ingresa un texto. Ejemplo: .pinterest prime 🐉`);
 
   try {
     if (text.includes("https://")) {
