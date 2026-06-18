@@ -1,0 +1,245 @@
+import fs from 'fs'
+import { join } from 'path'
+import { xpRange } from '../lib/levelling.js'
+
+const tags = {
+  descargas: '🌀 DESCARGAS',
+  tools: '🔧 HERRAMIENTAS',
+  owner: '👑 OWNER',
+  info: 'ℹ️ INFORMACIÓN',
+  game: '🎮 JUEGOS',
+  group: '👥 GRUPOS',
+  search: '🔎 BUSCADOR',
+  sticker: '📌 STICKERS',
+  ia: '🤖 IA 16',
+  fun: '😂 DIVERSIÓN',
+  premium: '⚡ PREMIUN'
+}
+
+const defaultMenu = {
+  before: `
+╔══════════════════╗
+║⚡ *Prime Bot Pro* 🌀  ║
+╠══════════════════╣
+║ Hola~ soy %botname (◕ᴗ◕✿)
+║ *%name*, %greeting jeje
+║ 
+║ ⚡ *Tipo:* %tipo
+║ 📅 *Fecha:* %date
+║ 🕐 *Hora:* %time
+║ ⏱️ *Activo:* %uptime
+╠════════════════════╣
+║      🌀 𝙲𝙾𝙼𝙰𝙽𝙳𝙾𝚂       
+%readmore
+`.trimStart(),
+
+  header: '\n╠═ %category ═╣\n',
+  body: '║ 🌀 *%cmd* %islimit %isPremium',
+  footer: '',
+  after: `
+╠════════════════╣
+║⚡ *Prime Bot* 
+║⚡ Creado por Whois~ (◕‿◕✿)
+╚════════════════╝
+
+*¡Que la fuerza te acompañe!* 🌀✨
+`.trim(),
+}
+
+const handler = async (m, { conn, usedPrefix: _p }) => {
+  try {
+    const { exp, limit, level } = global.db.data.users[m.sender]
+    const { min, xp, max } = xpRange(level, global.multiplier)
+    const name = await conn.getName(m.sender)
+
+    const ahora = new Date()
+    const horaVenezuela = new Date(ahora.toLocaleString('en-US', { timeZone: 'America/Caracas' }))
+    
+    const date = horaVenezuela.toLocaleDateString('es', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric',
+      weekday: 'long'
+    })
+    
+    const time = horaVenezuela.toLocaleTimeString('es', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    })
+
+    const help = Object.values(global.plugins)
+      .filter(p => !p.disabled)
+      .map(p => ({
+        help: Array.isArray(p.help) ? p.help : [p.help],
+        tags: Array.isArray(p.tags) ? p.tags : [p.tags],
+        prefix: 'customPrefix' in p,
+        limit: p.limit,
+        premium: p.premium,
+      }))
+
+    let nombreBot = 'Prime Bot Pro'
+    
+    let bannerFinal = null
+    const imagePath = join(process.cwd(), 'lib', 'gohan.jpg')
+    
+    if (fs.existsSync(imagePath)) {
+      bannerFinal = fs.readFileSync(imagePath)
+    } else {
+      console.warn('⚠️ No se encuentra lib/gohan.jpg')
+    }
+
+    const botActual = conn.user?.jid?.split('@')[0].replace(/\D/g, '')
+    const configPath = join('./JadiBots', botActual, 'config.json')
+    
+    if (fs.existsSync(configPath)) {
+      try {
+        const config = JSON.parse(fs.readFileSync(configPath))
+        if (config.name) nombreBot = config.name
+      } catch (e) {
+        console.error('🌀 Error leyendo config:', e)
+      }
+    }
+
+    const tipo = conn.user.jid === global.conn.user.jid ? '⚡ PRINCIPAL' : '⚡ SUB'
+    const menuConfig = conn.menu || defaultMenu
+
+    const _text = [
+      menuConfig.before,
+      ...Object.keys(tags).map(tag => {
+        const cmds = help
+          .filter(menu => menu.tags?.includes(tag))
+          .map(menu => menu.help.map(h => 
+            menuConfig.body
+              .replace(/%cmd/g, menu.prefix ? h : `${_p}${h}`)
+              .replace(/%islimit/g, menu.limit ? '🔒' : '')
+              .replace(/%isPremium/g, menu.premium ? '💎' : '🌀')
+          ).join('\n')).join('\n')
+        return cmds ? [menuConfig.header.replace(/%category/g, tags[tag]), cmds, menuConfig.footer].join('\n') : ''
+      }).filter(Boolean),
+      menuConfig.after
+    ].join('\n')
+
+    const replace = {
+      '%': '%',
+      p: _p,
+      botname: nombreBot,
+      taguser: '@' + m.sender.split('@')[0],
+      exp: exp - min,
+      maxexp: xp,
+      totalexp: exp,
+      xp4levelup: max - exp,
+      level,
+      limit,
+      name,
+      date,
+      time,
+      uptime: clockString(process.uptime() * 1000),
+      tipo,
+      readmore: readMore,
+      greeting: getUwUGreeting(horaVenezuela.getHours()),
+    }
+
+    const text = _text.replace(
+      new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'),
+      (_, name) => String(replace[name])
+    )
+
+    const buttons = [
+      { 
+        buttonId: '.comprar', 
+        buttonText: { displayText: '⚡ VENTAS' }, 
+        type: 1 
+      }
+    ]
+
+    const messageContent = {
+      caption: text.trim(),
+      footer: '🌀 *Prime Bot Pro* - ¡Comandos!',
+      buttons,
+      headerType: 1,
+      mentionedJid: conn.parseMention(text),
+      contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true
+      }
+    }
+
+    if (bannerFinal) {
+      messageContent.image = bannerFinal
+      messageContent.headerType = 4
+    } else {
+      messageContent.text = text.trim()
+    }
+
+    await conn.sendMessage(m.chat, messageContent, { quoted: m })
+
+    await m.react('🌀')
+    setTimeout(() => m.react('⚡'), 500)
+    setTimeout(() => m.react('⚡'), 1000)
+
+  } catch (e) {
+    console.error('💥 Error en el menú uwu:', e)
+    await conn.reply(m.chat, 
+`🌀 *¡Ups! Algo salió mal~* (´•̥̥̥ω•̥̥̥\`)
+
+El menú no pudo cargarse...
+⚡ *Causa:* Energía insuficiente
+🌀 *Solución:* Intenta de nuevo~
+
+*Mientras usa:* ${_p}help simple`, 
+      m
+    )
+  }
+}
+
+handler.command = ['menu', 'help', 'menú', 'ayuda', 'comandos', 'beastmenu', 'gohan']
+handler.tags = ['beast', 'main', 'menu']
+handler.help = ['menu',]
+handler.register = false
+handler.limit = false
+
+export default handler
+
+const more = String.fromCharCode(8206)
+const readMore = more.repeat(4001)
+
+function clockString(ms) {
+  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
+  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
+  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
+  return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':')
+}
+
+function getUwUGreeting(hour) {
+  const greetings = {
+    0: 'una noche mágica bajo las estrellas 🌙✨',
+    1: 'una noche de sueños Saiyan 💤 🌀',
+    2: 'una noche llena de energía Ki 🌌⚡',
+    3: 'un amanecer en la Room of Spirit and Time 🌅⏳',
+    4: 'un amanecer de meditación Kame 🧘🌀',
+    5: 'un amanecer de entrenamiento con King Kai 👑🌅',
+    6: 'una mañana de Kamehameha en la playa 🏖️🌀',
+    7: 'una mañana en Kame House con tortugas 🏠🐢',
+    8: 'una mañana volando en Nimbus ☁️ 🌀',
+    9: 'una mañana en el Tenkaichi Budokai 🥋🎯',
+    10: 'un día de batalla en el Cell Games ⚔️💥',
+    11: 'un día de torneo del Poder 💪🌟',
+    12: 'un día soleado en el Planet Namek 🌍☀️',
+    13: 'una tarde de entrenamiento con Whis 🥛🌀',
+    14: 'una tarde en el Hyperbolic Time Chamber ⏱️✨',
+    15: 'una tarde de fusiones en el dojo 🔄🌸',
+    16: 'una tarde de transformaciones Saiyan 🌀💫',
+    17: 'un atardecer después del Genkidama 🌇⚡',
+    18: 'una noche de recuperación en la cápsula 💊🏥',
+    19: 'una noche viendo las estrellas Saiyan 🌠⚡',
+    20: 'una noche de cuentos del Planeta Vegeta 🪐📖',
+    21: 'una noche preparando Semillas Senzu 🌱🍡',
+    22: 'una noche protegiendo la Tierra 🌎🛡️',
+    23: 'una noche de vigilia Saiyan 🌃🌸',
+  }
+  return 'Espero que tengas ' + (greetings[hour] || 'un día increíble lleno de poder Saiyan~ 🌸✨')
+}
+
+handler.alias = ['menuu', 'ayudame', 'comanditos', 'beasthelp']
