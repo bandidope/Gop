@@ -83,8 +83,8 @@ const handler = async (m, { conn, text }) => {
 🌐 _enlace_: ${url}
 📚 _api_ https://api-gohan.onrender.com
 
-     ✧━『 _GOHAN BEAST_ 』━✧
-    🐉 _Powered by wilker_ 🐉
+     ✧━『 _PRIME BEAST_ 』━✧
+    🐉 _Powered by Whois_ 🐉
 `
 
     let thumb = fallbackThumb
