@@ -6,7 +6,7 @@ let handler = async (m, { conn }) => {
   
   await m.react('⚡')
   
-  let sentMsg = await m.reply(`🐉 *Activando Kamehameha...*`)
+  let sentMsg = await m.reply(`🐉 *Activando Comando...*`)
   
   let latency = speed() - timestamp
   
@@ -17,7 +17,7 @@ let handler = async (m, { conn }) => {
   
   if (latency < 50) {
     velocidadDBZ = '🌀 *VELOCIDAD INSTANTÁNEA*'
-    ataqueDBZ = 'Instant Transmission de Goku'
+    ataqueDBZ = 'Instant Transmission'
     emojiDBZ = '✨'
   } else if (latency < 150) {
     velocidadDBZ = '⚡ *VELOCIDAD RELÁMPAGO*'
@@ -25,27 +25,27 @@ let handler = async (m, { conn }) => {
     emojiDBZ = '💫'
   } else if (latency < 300) {
     velocidadDBZ = '🔥 *VELOCIDAD SÓNICA*'
-    ataqueDBZ = 'Super Saiyan Speed'
+    ataqueDBZ = 'Super Speed'
     emojiDBZ = '🌟'
   } else if (latency < 500) {
     velocidadDBZ = '💨 *VELOCIDAD NIMBUS*'
     ataqueDBZ = 'Flying Nimbus Cloud'
     emojiDBZ = '☁️'
   } else {
-    velocidadDBZ = '🐌 *VELOCIDAD TORTUGA*'
+    velocidadDBZ = '🐌 *VELOCIDAD LENTA*'
     ataqueDBZ = 'Master Roshi Walking'
     emojiDBZ = '🐢'
   }
   
   const result = `
-${emojiDBZ} *「 PING BEAST 」* ${emojiDBZ}
+${emojiDBZ} *「 PING 」* ${emojiDBZ}
 
 ${velocidadDBZ}
 📊 *Tiempo:* ${latency.toFixed(0)}ms
 🎯 *Ataque:* ${ataqueDBZ}
 
-⚡ *Gohan Beast* - ¡Conectado!
-🐉 *By Wilker*
+⚡ *Prime Beast* - ¡Conectado!
+🐉 *By Whois*
 `
   
   await conn.sendMessage(m.chat, {
