@@ -6,7 +6,7 @@ import fetch from 'node-fetch'
 let handler = async (m, { conn, args, usedPrefix, command }) => {
   try {
     if (!args[0]) {
-      return m.reply('🐉 *GOHAN BEAST BOT* 🐉\n\n> Por favor, menciona el nombre o URL del video que deseas descargar')
+      return m.reply('🐉 *PRIME BEAST BOT* 🐉\n\n> Por favor, menciona el nombre o URL del video que deseas descargar')
     }
 
     const input_text = args.join(' ').trim()
@@ -29,7 +29,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
         const channel = video_info.author?.name || video_info.author || 'Desconocido'
 
         const info_message = `
-🐉 *GOHAN BEAST BOT* 🐉
+🐉 *PRIME BEAST BOT* 🐉
 
 ⚡ *Descargando video...*
 
@@ -52,13 +52,13 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     } catch {}
 
     if (!isYTUrl(url)) {
-      return m.reply('🐉 *Gohan Beast Bot* 🐉\n\n> No encontré un video válido de YouTube.')
+      return m.reply('🐉 *Prime Beast Bot* 🐉\n\n> No encontré un video válido de YouTube.')
     }
 
     const video = await getVideoFromShadow(url)
 
     if (!video?.url) {
-      return m.reply('🐉 *GOHAN BEAST BOT* 🐉\n\n> No se pudo descargar el *video*, intenta más tarde.')
+      return m.reply('🐉 *PRIME BEAST BOT* 🐉\n\n> No se pudo descargar el *video*, intenta más tarde.')
     }
 
     await conn.sendMessage(m.chat, {
@@ -76,7 +76,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
   } catch (e) {
     console.error(e)
     await m.reply(
-      `🐉 *GOHAN BEAST BOT* 🐉\n\n> Error al ejecutar el comando *${usedPrefix + command}*.\n⚡ [Error: *${e.message}*]`
+      `🐉 *PRIME BEAST BOT* 🐉\n\n> Error al ejecutar el comando *${usedPrefix + command}*.\n⚡ [Error: *${e.message}*]`
     )
   }
 }
